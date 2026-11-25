@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservar Cita | Studio Belleza & Spa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    if (localStorage.getItem('salon_theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif-hero { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors">
+
+  <!-- Barra Superior -->
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 transition-colors">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          SM
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-900 dark:text-white leading-tight">Marisol Salon</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Reserva tu cita en línea</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="connectionStatus" class="hidden sm:inline-block text-xs font-medium px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+          ● Conectando...
+        </span>
+        <button type="button" onclick="toggleTheme()" title="Cambiar tema claro/oscuro"
+          class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-rose-400 transition-colors text-xs font-semibold">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8 space-y-6">
+
+    <!-- BANNER HERO -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-colors">
+      <div class="space-y-3 max-w-xl">
+        <span class="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/70">
+          RESERVA ONLINE 24/7
+        </span>
+        <h2 class="font-serif-hero text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
+          Realza tu belleza natural
+        </h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          Elige tu tratamiento favorito, selecciona a tu especialista y reserva tu espacio en segundos. Sin llamadas ni esperas.
+        </p>
+      </div>
+
+      <!-- Tarjeta de Ubicación, Horario y Copiar Link -->
+      <div class="w-full md:w-auto shrink-0 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+          <span class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">📍</span>
+          <span class="font-medium">Tu Dirección Aquí</span>
+        </div>
+        <div class="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300">
+          <span class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">🕒</span>
+          <span class="font-medium">Lun - Sáb: 9:00 AM - 6:00 PM</span>
+        </div>
+        <button type="button" onclick="copyBookingLink()" id="copyLinkBtn"
+          class="w-full py-2 px-4 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-xs font-semibold text-slate-800 dark:text-slate-100 transition-colors flex items-center justify-center gap-2">
+          <span>🔗</span>
+          <span id="copyLinkText">Copiar link para clientes</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- FORMULARIO DE RESERVA EN 4 PASOS -->
+    <div id="bookingFormCard" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
+      <form id="publicBookingForm" class="p-6 sm:p-8 space-y-8">
+        
+        <!-- Paso 1: Selecciona un Servicio -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Selecciona un Servicio</h3>
+          </div>
+          <div id="servicesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          <input type="hidden" id="selectedServiceId">
+        </div>
+
+        <!-- Paso 2: Elige tu Especialista -->
+        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Elige tu Especialista</h3>
+          </div>
+          <div id="specialistsGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+          <input type="hidden" id="selectedSpecialistId">
+        </div>
+
+        <!-- Paso 3: Fecha y Horario Disponible -->
+        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Fecha y Horario Disponible</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="bookingDate" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Selecciona la fecha</label>
+              <input type="date" id="bookingDate" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Horarios disponibles</label>
+              <div id="timeSlotsGrid" class="grid grid-cols-4 sm:grid-cols-3 gap-2"></div>
+              <input type="hidden" id="selectedTime">
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 4: Tus Datos -->
+        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center">4</span>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Tus Datos de Contacto</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="clientName" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Tu Nombre Completo</label>
+              <input type="text" id="clientName" placeholder="Ej. María Fernanda López" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none text-sm">
+            </div>
+            <div>
+              <label for="clientPhone" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Teléfono / WhatsApp</label>
+              <input type="tel" id="clientPhone" placeholder="Ej. 5555-1234" required
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none text-sm">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+          <span>Confirmar Reserva</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Comprobante de Cita Confirmada -->
+    <div id="bookingSuccessCard" class="hidden bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 text-center">
+      <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+        ✓
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white">¡Cita Agendada con Éxito!</h2>
+      <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Hemos registrado tu espacio en nuestra agenda.</p>
+
+      <div id="receiptDetails" class="mt-6 bg-slate-50 dark:bg-slate-800/70 rounded-xl p-5 text-left border border-slate-200 dark:border-slate-700 space-y-2 text-sm"></div>
+
+      <button type="button" onclick="resetBooking()"
+        class="mt-6 px-6 py-2.5 bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-700 text-white text-sm font-semibold rounded-xl transition-colors">
+        Agendar otra cita
+      </button>
+    </div>
+  </main>
+
+  <footer class="text-center py-6 text-xs text-slate-400">
+    Studio Belleza & Spa &copy; 2026 &bull; Sistema de Reservas en Línea
+  </footer>
+
+  <script>
+    function updateThemeIcon() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+    }
+    window.toggleTheme = function() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('salon_theme', isDark ? 'dark' : 'light');
+      updateThemeIcon();
+    };
+    updateThemeIcon();
+
+    window.copyBookingLink = function() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const label = document.getElementById('copyLinkText');
+        label.innerText = "¡Enlace copiado!";
+        setTimeout(() => { label.innerText = "Copiar link para clientes"; }, 2500);
+      });
+    };
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+    import { 
+      getFirestore, collection, addDoc, onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNKP847lDA7lA8ZBZSDo2DgYWNTGhv8Pw",
+      authDomain: "salon-marisol-app.firebaseapp.com",
+      projectId: "salon-marisol-app",
+      storageBucket: "salon-marisol-app.firebasestorage.app",
+      messagingSenderId: "1083675211389",
+      appId: "1:1083675211389:web:30943b184b4ee2c8e86314"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const CURRENCY = "Q";
+    const availableHours = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"];
+    
+    const defaultServices = [
+      { id: "srv1", type: "Servicio", name: "Corte & Styling Profesional", price: 150, duration: "45 min" },
+      { id: "srv2", type: "Servicio", name: "Coloración / Balayage Completo", price: 450, duration: "120 min" },
+      { id: "srv3", type: "Servicio", name: "Manicure Gelish", price: 90, duration: "45 min" },
+      { id: "srv4", type: "Servicio", name: "Pedicure Spa", price: 110, duration: "60 min" }
+    ];
+
+    const defaultSpecialists = [
+      { id: "esp1", type: "Especialista", name: "Valeria Cruz", role: "Estilista Master", photoUrl: null },
+      { id: "esp2", type: "Especialista", name: "Camila Duarte", role: "Colorista", photoUrl: null },
+      { id: "esp3", type: "Especialista", name: "Elena Morales", role: "Especialista Spa", photoUrl: null }
+    ];
+
+    let servicesList = [...defaultServices];
+    let specialistsList = [...defaultSpecialists];
+    let bookedAppointments = [];
+
+    const dateInput = document.getElementById('bookingDate');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+    dateInput.min = today;
+
+    function getInitials(fullName) {
+      return (fullName || "ES")
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join('');
+    }
+
+    // Delegación de eventos segura para Servicios, Especialistas y Horas
+    document.getElementById('servicesGrid').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-service-id]');
+      if (!card) return;
+      document.getElementById('selectedServiceId').value = card.dataset.serviceId;
+      renderServices();
+    });
+
+    document.getElementById('specialistsGrid').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-specialist-id]');
+      if (!card) return;
+      document.getElementById('selectedSpecialistId').value = card.dataset.specialistId;
+      document.getElementById('selectedTime').value = "";
+      renderSpecialists();
+      renderTimeSlots();
+    });
+
+    document.getElementById('timeSlotsGrid').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-time-slot]');
+      if (!btn || btn.disabled) return;
+      document.getElementById('selectedTime').value = btn.dataset.timeSlot;
+      renderTimeSlots();
+    });
+
+    function renderServices() {
+      const grid = document.getElementById('servicesGrid');
+      const currentSelected = document.getElementById('selectedServiceId').value;
+
+      grid.innerHTML = servicesList.map(srv => {
+        const isSelected = String(srv.id) === String(currentSelected);
+        return `
+          <div data-service-id="${srv.id}"
+            class="cursor-pointer border rounded-xl p-4 transition-all flex justify-between items-center select-none
+            ${isSelected
+              ? 'border-rose-600 bg-rose-50/70 dark:bg-rose-950/40 ring-1 ring-rose-600'
+              : 'border-slate-200 dark:border-slate-700 hover:border-rose-400'}">
+            <div>
+              <p class="font-semibold text-sm text-slate-800 dark:text-slate-100">${srv.name}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">🕒 ${srv.duration || '45 min'}</p>
+            </div>
+            <span class="font-bold text-rose-600 dark:text-rose-400 text-sm">${CURRENCY}${Number(srv.price).toFixed(2)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSpecialists() {
+      const grid = document.getElementById('specialistsGrid');
+      const currentSelected = document.getElementById('selectedSpecialistId').value;
+
+      grid.innerHTML = specialistsList.map(esp => {
+        const isSelected = String(esp.id) === String(currentSelected);
+        const initials = getInitials(esp.name);
+
+        const avatarHtml = esp.photoUrl
+          ? `<img src="${esp.photoUrl}" alt="${esp.name}"
+               class="w-14 h-14 rounded-full object-cover mb-3 pointer-events-none transition-all ${isSelected ? 'ring-2 ring-rose-600 ring-offset-2 dark:ring-offset-slate-900' : 'border border-slate-300 dark:border-slate-600'}">`
+          : `<div class="w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm mb-3 pointer-events-none transition-colors
+              ${isSelected
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'}">
+              ${initials}
+            </div>`;
+
+        return `
+          <div data-specialist-id="${esp.id}"
+            class="cursor-pointer border rounded-2xl p-5 transition-all flex flex-col items-center text-center select-none
+            ${isSelected
+              ? 'border-rose-500 bg-rose-50/80 dark:bg-rose-950/40 ring-1 ring-rose-500'
+              : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-rose-400'}">
+            ${avatarHtml}
+            <p class="font-bold text-sm text-slate-900 dark:text-white pointer-events-none">${esp.name}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 pointer-events-none">${esp.role || 'Especialista'}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTimeSlots() {
+      const selectedDate = dateInput.value;
+      const selectedSpecialistId = document.getElementById('selectedSpecialistId').value;
+
+      const occupied = bookedAppointments
+        .filter(app => {
+          if (app.date !== selectedDate) return false;
+          if (!selectedSpecialistId) return true;
+          return app.specialistId === selectedSpecialistId || !app.specialistId;
+        })
+        .map(app => app.time);
+
+      const grid = document.getElementById('timeSlotsGrid');
+      const currentTime = document.getElementById('selectedTime').value;
+
+      grid.innerHTML = availableHours.map(hour => {
+        const isTaken = occupied.includes(hour);
+        const isSelected = hour === currentTime && !isTaken;
+
+        if (hour === currentTime && isTaken) {
+          document.getElementById('selectedTime').value = "";
+        }
+
+        return `
+          <button type="button" data-time-slot="${hour}" ${isTaken ? 'disabled' : ''}
+            class="time-btn py-2 px-2 rounded-lg text-xs font-semibold border transition-all
+            ${isTaken
+              ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-400 dark:text-slate-600 border-slate-200 dark:border-slate-800 cursor-not-allowed line-through'
+              : isSelected
+                ? 'bg-rose-600 text-white border-rose-600 shadow-sm ring-2 ring-rose-300 dark:ring-rose-800'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:border-rose-500'}">
+            ${hour}
+          </button>
+        `;
+      }).join('');
+    }
+
+    dateInput.addEventListener('change', () => {
+      document.getElementById('selectedTime').value = "";
+      renderTimeSlots();
+    });
+
+    // Pintar interfaz de inmediato
+    renderServices();
+    renderSpecialists();
+    renderTimeSlots();
+
+    // 1. Sincronizar catálogo con Firestore
+    onSnapshot(
+      collection(db, "catalog"),
+      (snapshot) => {
+        const statusBadge = document.getElementById('connectionStatus');
+        statusBadge.innerText = "● Disponible hoy";
+        statusBadge.className = "hidden sm:inline-block text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+
+        const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const dbServices = allDocs.filter(d => d.type === "Servicio");
+        const dbSpecialists = allDocs.filter(d => d.type === "Especialista");
+
+        servicesList = dbServices.length > 0 ? dbServices : defaultServices;
+        specialistsList = dbSpecialists.length > 0 ? dbSpecialists : defaultSpecialists;
+
+        renderServices();
+        renderSpecialists();
+      },
+      (error) => {
+        console.error("Error Firestore catalog:", error);
+      }
+    );
+
+    // 2. Sincronizar citas ocupadas
+    onSnapshot(
+      collection(db, "appointments"),
+      (snapshot) => {
+        bookedAppointments = snapshot.docs
+          .map(doc => doc.data())
+          .filter(app => app.status !== "cancelled");
+        renderTimeSlots();
+      }
+    );
+
+    // 3. Guardar reserva en Cloud Firestore
+    document.getElementById('publicBookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const serviceId = document.getElementById('selectedServiceId').value;
+      const specialistId = document.getElementById('selectedSpecialistId').value;
+      const time = document.getElementById('selectedTime').value;
+
+      if (!serviceId) return alert("Por favor selecciona un servicio en el paso 1.");
+      if (!specialistId) return alert("Por favor elige tu especialista en el paso 2.");
+      if (!time) return alert("Por favor selecciona un horario disponible en el paso 3.");
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Guardando reserva...</span>`;
+
+      const service = servicesList.find(s => String(s.id) === String(serviceId));
+      const specialist = specialistsList.find(esp => String(esp.id) === String(specialistId));
+      const clientName = document.getElementById('clientName').value.trim();
+      const clientPhone = document.getElementById('clientPhone').value.trim();
+      const date = dateInput.value;
+
+      try {
+        await addDoc(collection(db, "appointments"), {
+          clientName,
+          clientPhone,
+          serviceId: service.id,
+          serviceName: service.name,
+          specialistId: specialist.id,
+          specialistName: specialist.name,
+          price: Number(service.price),
+          date,
+          time,
+          status: "pending",
+          createdAt: serverTimestamp()
+        });
+
+        document.getElementById('receiptDetails').innerHTML = `
+          <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Cliente:</span><span class="font-semibold">${clientName}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Teléfono:</span><span class="font-semibold">${clientPhone}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Servicio:</span><span class="font-semibold">${service.name}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Especialista:</span><span class="font-semibold text-rose-600 dark:text-rose-400">${specialist.name}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Fecha y Hora:</span><span class="font-semibold">${date} a las ${time}</span></div>
+          <div class="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-2 mt-2"><span class="font-semibold">Total Estimado:</span><span class="font-bold text-rose-600 dark:text-rose-400">${CURRENCY}${Number(service.price).toFixed(2)}</span></div>
+        `;
+
+        document.getElementById('bookingFormCard').classList.add('hidden');
+        document.getElementById('bookingSuccessCard').classList.remove('hidden');
+      } catch (error) {
+        console.error("Error al agendar:", error);
+        alert("Firebase rechazó guardar la cita (" + error.code + "). Revisa las Reglas de Firestore.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Confirmar Reserva</span>`;
+      }
+    });
+
+    window.resetBooking = function() {
+      document.getElementById('publicBookingForm').reset();
+      dateInput.value = today;
+      document.getElementById('selectedServiceId').value = "";
+      document.getElementById('selectedSpecialistId').value = "";
+      document.getElementById('selectedTime').value = "";
+      renderServices();
+      renderSpecialists();
+      renderTimeSlots();
+      document.getElementById('bookingSuccessCard').classList.add('hidden');
+      document.getElementById('bookingFormCard').classList.remove('hidden');
+    };
+  </script>
+</body>
+</html>
